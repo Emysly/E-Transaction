@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 @Data
-public class CurrentAccount {
+public class PrimaryAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,6 +17,6 @@ public class CurrentAccount {
 
     private BigDecimal accountBalance;
 
-    @OneToMany(mappedBy = "currentAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CurrentTransaction> currentTransactionList;
+    @OneToMany(mappedBy = "primaryAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PrimaryTransaction> primaryTransactionList;
 }
