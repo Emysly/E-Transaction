@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CurrentAccountRepository extends JpaRepository<CurrentAccount, Long> {
+    CurrentAccount findByAccountNumber(Integer accountNumber);
 }
