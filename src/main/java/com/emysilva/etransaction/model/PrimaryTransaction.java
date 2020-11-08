@@ -12,7 +12,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CurrentTransaction {
+public class PrimaryTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,6 +24,6 @@ public class CurrentTransaction {
     private BigDecimal availableBalance;
 
     @ManyToOne
-    @JoinColumn(name = "current_account_id")
-    private CurrentAccount currentAccount;
+    @JoinColumn(name = "primary_account_id")
+    private PrimaryAccount primaryAccount;
 }

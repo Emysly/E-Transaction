@@ -1,27 +1,39 @@
 package com.emysilva.etransaction.model;
 
-import com.emysilva.etransaction.model.security.Authority;
-import com.emysilva.etransaction.model.security.UserRole;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import lombok.ToString;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import javax.persistence.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
+import com.emysilva.etransaction.model.security.Authority;
+import com.emysilva.etransaction.model.security.UserRole;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
-@Data
+@NoArgsConstructor
 @ToString
+@Data
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "userId", nullable = false, updatable = false)
+    @Column(name = "user_id", nullable = false, updatable = false)
     private Long userId;
     private String username;
     private String password;
@@ -32,55 +44,59 @@ public class User implements UserDetails {
     private String email;
     private String phone;
 
-    private boolean enabled = true;
+    private boolean enabled=true;
 
     @OneToOne
-    private CurrentAccount currentAccount;
+    private PrimaryAccount primaryAccount;
 
     @OneToOne
     private SavingsAccount savingsAccount;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Beneficiary> beneficiaryList;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Recipient> recipientList;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<UserRole> userRoles = new HashSet<>();
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-        userRoles.forEach(userRole -> authorities.add(new Authority(userRole.getRole().getName())));
+        userRoles.forEach(ur -> authorities.add(new Authority(ur.getRole().getName())));
         return authorities;
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return null;
+        return username;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
         return enabled;
     }
+
+
 }

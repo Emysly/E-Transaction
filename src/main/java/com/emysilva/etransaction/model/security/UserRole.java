@@ -1,7 +1,6 @@
 package com.emysilva.etransaction.model.security;
 
 import com.emysilva.etransaction.model.User;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,7 +10,6 @@ import javax.persistence.*;
 @Table(name = "user_role")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserRole {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,4 +22,9 @@ public class UserRole {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
+
+    public UserRole(User user, Role role) {
+        this.user = user;
+        this.role = role;
+    }
 }

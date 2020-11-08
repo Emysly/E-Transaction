@@ -2,12 +2,17 @@ package com.emysilva.etransaction.service.impl;
 
 import com.emysilva.etransaction.model.User;
 import com.emysilva.etransaction.model.security.UserRole;
+import com.emysilva.etransaction.repository.RoleRepository;
 import com.emysilva.etransaction.repository.UserRepository;
+import com.emysilva.etransaction.service.AccountService;
 import com.emysilva.etransaction.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,11 +21,34 @@ import java.util.Set;
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
-    private final UserRepository userRepository;
+    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+
+    private UserRepository userRepository;
+
+    private RoleRepository roleRepository;
+
+    private BCryptPasswordEncoder passwordEncoder;
+
+    private AccountService accountService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Autowired
+    public void setRoleRepository(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
+
+    @Autowired
+    public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Autowired
+    public void setAccountService(AccountService accountService) {
+        this.accountService = accountService;
     }
 
     @Override
@@ -49,11 +77,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public User createUser(User user, Set<UserRole> userRoles) {
-        return null;
-    }
-
-    @Override
     public List<User> findUserList() {
         return userRepository.findAll();
     }
@@ -70,6 +93,34 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = findByUsername(username);
         user.setEnabled(false);
         userRepository.save(user);
+    }
+
+    @Override
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+    @Override
+    public void createUser(User user, Set<UserRole> userRoles) {
+        User localUser = userRepository.findByUsername(user.getUsername());
+
+        if (localUser != null) {
+            LOG.info("User with username {} already exist. Nothing will be done. ", user.getUsername());
+        } else {
+            String encryptedPassword = passwordEncoder.encode(user.getPassword());
+            user.setPassword(encryptedPassword);
+
+            for (UserRole ur : userRoles) {
+                roleRepository.save(ur.getRole());
+            }
+
+            user.getUserRoles().addAll(userRoles);
+
+            user.setPrimaryAccount(accountService.createPrimaryAccount());
+            user.setSavingsAccount(accountService.createSavingsAccount());
+
+            userRepository.save(user);
+        }
     }
 
     @Override
