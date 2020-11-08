@@ -1,9 +1,6 @@
 package com.emysilva.etransaction.service;
 
-import com.emysilva.etransaction.model.Beneficiary;
-import com.emysilva.etransaction.model.CurrentTransaction;
-import com.emysilva.etransaction.model.SavingsAccount;
-import com.emysilva.etransaction.model.SavingsTransaction;
+import com.emysilva.etransaction.model.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -17,10 +14,10 @@ public interface TransactionService {
 
     void saveSavingsDepositTransaction(SavingsTransaction savingsTransaction);
 
-    void savePrimaryWithdrawTransaction(CurrentTransaction currentTransaction);
+    void saveCurrentWithdrawTransaction(CurrentTransaction currentTransaction);
     void saveSavingsWithdrawTransaction(SavingsTransaction savingsTransaction);
 
-    void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, CurrentTransaction currentTransaction, SavingsAccount savingsAccount) throws Exception;
+    void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount) throws Exception;
 
     List<Beneficiary> findRecipientList(Principal principal);
 
@@ -30,5 +27,5 @@ public interface TransactionService {
 
     void deleteBeneficiaryByName(String beneficiaryName);
 
-    void toSomeoneElseTransfer(Beneficiary beneficiary, String accountType, String amount, CurrentTransaction currentTransaction, SavingsAccount savingsAccount);
+    void toSomeoneElseTransfer(Beneficiary beneficiary, String accountType, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount);
 }
