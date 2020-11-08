@@ -16,25 +16,25 @@ import java.util.stream.Collectors;
 public class TransactionServiceImpl implements TransactionService {
 
     private final UserService userService;
-    private final CurrentTransactionRepository currentTransactionRepository;
+    private final PrimaryTransactionRepository primaryTransactionRepository;
     private final SavingsTransactionRepository savingsTransactionRepository;
-    private final CurrentAccountRepository currentAccountRepository;
+    private final PrimaryAccountRepository primaryAccountRepository;
     private final SavingsAccountRepository savingsAccountRepository;
-    private final BeneficiaryRepository beneficiaryRepository;
+    private final RecipientRepository recipientRepository;
 
-    public TransactionServiceImpl(UserService userService, CurrentTransactionRepository currentTransactionRepository, SavingsTransactionRepository savingsTransactionRepository, CurrentAccountRepository currentAccountRepository, SavingsAccountRepository savingsAccountRepository, BeneficiaryRepository beneficiaryRepository) {
+    public TransactionServiceImpl(UserService userService, PrimaryTransactionRepository primaryTransactionRepository, SavingsTransactionRepository savingsTransactionRepository, PrimaryAccountRepository primaryAccountRepository, SavingsAccountRepository savingsAccountRepository, RecipientRepository recipientRepository) {
         this.userService = userService;
-        this.currentTransactionRepository = currentTransactionRepository;
+        this.primaryTransactionRepository = primaryTransactionRepository;
         this.savingsTransactionRepository = savingsTransactionRepository;
-        this.currentAccountRepository = currentAccountRepository;
+        this.primaryAccountRepository = primaryAccountRepository;
         this.savingsAccountRepository = savingsAccountRepository;
-        this.beneficiaryRepository = beneficiaryRepository;
+        this.recipientRepository = recipientRepository;
     }
 
     @Override
-    public List<CurrentTransaction> findCurrentTransactionList(String username) {
+    public List<PrimaryTransaction> findPrimaryTransactionList(String username) {
         User user = userService.findByUsername(username);
-        return user.getCurrentAccount().getCurrentTransactionList();
+        return user.getPrimaryAccount().getPrimaryTransactionList();
     }
 
     @Override
@@ -44,8 +44,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void saveCurrentDepositTransaction(CurrentTransaction currentTransaction) {
-        currentTransactionRepository.save(currentTransaction);
+    public void savePrimaryDepositTransaction(PrimaryTransaction primaryTransaction) {
+        primaryTransactionRepository.save(primaryTransaction);
     }
 
     @Override
@@ -54,8 +54,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void saveCurrentWithdrawTransaction(CurrentTransaction currentTransaction) {
-        currentTransactionRepository.save(currentTransaction);
+    public void savePrimaryWithdrawTransaction(PrimaryTransaction primaryTransaction) {
+        primaryTransactionRepository.save(primaryTransaction);
     }
 
     @Override
@@ -64,30 +64,30 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount) throws Exception {
-        if (transferFrom.equalsIgnoreCase("current") && transferTo.equalsIgnoreCase("savings")) {
-            currentAccount.setAccountBalance(currentAccount.getAccountBalance().subtract(new BigDecimal(amount)));
+    public void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, PrimaryAccount primaryAccount, SavingsAccount savingsAccount) throws Exception {
+        if (transferFrom.equalsIgnoreCase("Primary") && transferTo.equalsIgnoreCase("savings")) {
+            primaryAccount.setAccountBalance(primaryAccount.getAccountBalance().subtract(new BigDecimal(amount)));
             savingsAccount.setAccountBalance(savingsAccount.getAccountBalance().add(new BigDecimal(amount)));
 
-            currentAccountRepository.save(currentAccount);
+            primaryAccountRepository.save(primaryAccount);
             savingsAccountRepository.save(savingsAccount);
 
             Date date = new Date();
 
-            CurrentTransaction currentTransaction = new CurrentTransaction();
-            currentTransaction.setCurrentAccount(currentAccount);
-            currentTransaction.setAvailableBalance(currentAccount.getAccountBalance());
-            currentTransaction.setStatus("Finished");
-            currentTransaction.setDescription("Between account transfer from " + transferFrom + " to " + transferTo);
-            currentTransaction.setDate(date);
-            currentTransaction.setType("Account");
-            currentTransaction.setAmount(Double.parseDouble(amount));
+            PrimaryTransaction primaryTransaction = new PrimaryTransaction();
+            primaryTransaction.setPrimaryAccount(primaryAccount);
+            primaryTransaction.setAvailableBalance(primaryAccount.getAccountBalance());
+            primaryTransaction.setStatus("Finished");
+            primaryTransaction.setDescription("Between account transfer from " + transferFrom + " to " + transferTo);
+            primaryTransaction.setDate(date);
+            primaryTransaction.setType("Account");
+            primaryTransaction.setAmount(Double.parseDouble(amount));
 
-            currentTransactionRepository.save(currentTransaction);
+            primaryTransactionRepository.save(primaryTransaction);
         }  else if (transferFrom.equalsIgnoreCase("savings") && transferTo.equalsIgnoreCase("current")) {
-            currentAccount.setAccountBalance(currentAccount.getAccountBalance().add(new BigDecimal(amount)));
+            primaryAccount.setAccountBalance(primaryAccount.getAccountBalance().add(new BigDecimal(amount)));
             savingsAccount.setAccountBalance(savingsAccount.getAccountBalance().subtract(new BigDecimal(amount)));
-            currentAccountRepository.save(currentAccount);
+            primaryAccountRepository.save(primaryAccount);
             savingsAccountRepository.save(savingsAccount);
 
             Date date = new Date();
@@ -107,46 +107,46 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public List<Beneficiary> findRecipientList(Principal principal) {
-        return beneficiaryRepository.findAll().stream()
+    public List<Recipient> findRecipientList(Principal principal) {
+        return recipientRepository.findAll().stream()
                 .filter(beneficiary -> principal.getName()
                 .equals(beneficiary.getUser().getUsername()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void saveRecipient(Beneficiary beneficiary) {
-        beneficiaryRepository.save(beneficiary);
+    public void saveRecipient(Recipient recipient) {
+        recipientRepository.save(recipient);
     }
 
     @Override
-    public Beneficiary findBeneficiaryByName(String beneficiaryName) {
-        return beneficiaryRepository.findByName(beneficiaryName);
+    public Recipient findRecipientByName(String recipientName) {
+        return recipientRepository.findByName(recipientName);
     }
 
     @Override
-    public void deleteBeneficiaryByName(String beneficiaryName) {
-        beneficiaryRepository.deleteByName(beneficiaryName);
+    public void deleteRecipientByName(String recipientName) {
+        recipientRepository.deleteByName(recipientName);
     }
 
     @Override
-    public void toSomeoneElseTransfer(Beneficiary beneficiary, String accountType, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount) {
+    public void toSomeoneElseTransfer(Recipient recipient, String accountType, String amount, PrimaryAccount primaryAccount, SavingsAccount savingsAccount) {
         if (accountType.equalsIgnoreCase("Primary")) {
-            currentAccount.setAccountBalance(currentAccount.getAccountBalance().subtract(new BigDecimal(amount)));
-            currentAccountRepository.save(currentAccount);
+            primaryAccount.setAccountBalance(primaryAccount.getAccountBalance().subtract(new BigDecimal(amount)));
+            primaryAccountRepository.save(primaryAccount);
 
             Date date = new Date();
 
-            CurrentTransaction currentTransaction = new CurrentTransaction();
-            currentTransaction.setCurrentAccount(currentAccount);
-            currentTransaction.setAvailableBalance(currentAccount.getAccountBalance());
-            currentTransaction.setStatus("Finished");
-            currentTransaction.setDescription("Transfer to beneficiary "+ beneficiary.getName());
-            currentTransaction.setDate(date);
-            currentTransaction.setType("Transfer");
-            currentTransaction.setAmount(Double.parseDouble(amount));
+            PrimaryTransaction primaryTransaction = new PrimaryTransaction();
+            primaryTransaction.setPrimaryAccount(primaryAccount);
+            primaryTransaction.setAvailableBalance(primaryAccount.getAccountBalance());
+            primaryTransaction.setStatus("Finished");
+            primaryTransaction.setDescription("Transfer to beneficiary "+ recipient.getName());
+            primaryTransaction.setDate(date);
+            primaryTransaction.setType("Transfer");
+            primaryTransaction.setAmount(Double.parseDouble(amount));
 
-            currentTransactionRepository.save(currentTransaction);
+            primaryTransactionRepository.save(primaryTransaction);
         } else if (accountType.equalsIgnoreCase("Savings")) {
             savingsAccount.setAccountBalance(savingsAccount.getAccountBalance().subtract(new BigDecimal(amount)));
             savingsAccountRepository.save(savingsAccount);
@@ -157,7 +157,7 @@ public class TransactionServiceImpl implements TransactionService {
             savingsTransaction.setSavingsAccount(savingsAccount);
             savingsTransaction.setAvailableBalance(savingsAccount.getAccountBalance());
             savingsTransaction.setStatus("Finished");
-            savingsTransaction.setDescription("Transfer to beneficiary "+ beneficiary.getName());
+            savingsTransaction.setDescription("Transfer to beneficiary "+ recipient.getName());
             savingsTransaction.setDate(date);
             savingsTransaction.setType("Transfer");
             savingsTransaction.setAmount(Double.parseDouble(amount));
