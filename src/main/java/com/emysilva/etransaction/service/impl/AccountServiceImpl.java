@@ -1,7 +1,7 @@
 package com.emysilva.etransaction.service.impl;
 
 import com.emysilva.etransaction.model.*;
-import com.emysilva.etransaction.repository.CurrentAccountRepository;
+import com.emysilva.etransaction.repository.PrimaryAccountRepository;
 import com.emysilva.etransaction.repository.SavingsAccountRepository;
 import com.emysilva.etransaction.service.AccountService;
 import com.emysilva.etransaction.service.TransactionService;
@@ -17,7 +17,7 @@ import java.util.Date;
 public class AccountServiceImpl implements AccountService {
     private static Integer baseAccountNumber = 1234567890;
 
-    private final CurrentAccountRepository currentAccountRepository;
+    private final PrimaryAccountRepository primaryAccountRepository;
 
     private final SavingsAccountRepository savingsAccountRepository;
 
@@ -26,21 +26,21 @@ public class AccountServiceImpl implements AccountService {
     private final TransactionService transactionService;
 
     @Autowired
-    public AccountServiceImpl(CurrentAccountRepository currentAccountRepository, SavingsAccountRepository savingsAccountRepository, UserService userService, TransactionService transactionService) {
-        this.currentAccountRepository = currentAccountRepository;
+    public AccountServiceImpl(PrimaryAccountRepository primaryAccountRepository, SavingsAccountRepository savingsAccountRepository, UserService userService, TransactionService transactionService) {
+        this.primaryAccountRepository = primaryAccountRepository;
         this.savingsAccountRepository = savingsAccountRepository;
         this.userService = userService;
         this.transactionService = transactionService;
     }
 
     @Override
-    public CurrentAccount createCurrentAccount() {
-        CurrentAccount currentAccount = new CurrentAccount();
-        currentAccount.setAccountBalance(new BigDecimal("0.0"));
-        currentAccount.setAccountNumber(genAccountNumber());
-        currentAccountRepository.save(currentAccount);
+    public PrimaryAccount createPrimaryAccount() {
+        PrimaryAccount primaryAccount = new PrimaryAccount();
+        primaryAccount.setAccountBalance(new BigDecimal("0.0"));
+        primaryAccount.setAccountNumber(genAccountNumber());
+        primaryAccountRepository.save(primaryAccount);
 
-        return currentAccountRepository.findByAccountNumber(currentAccount.getAccountNumber());
+        return primaryAccountRepository.findByAccountNumber(primaryAccount.getAccountNumber());
     }
 
     @Override
@@ -57,23 +57,23 @@ public class AccountServiceImpl implements AccountService {
     public void deposit(String accountType, double amount, Principal principal) {
         User user = userService.findByUsername(principal.getName());
 
-        if (accountType.equalsIgnoreCase("current")) {
-            CurrentAccount currentAccount = user.getCurrentAccount();
-            currentAccount.setAccountBalance(currentAccount.getAccountBalance().add(new BigDecimal(amount)));
-            currentAccountRepository.save(currentAccount);
+        if (accountType.equalsIgnoreCase("primary")) {
+            PrimaryAccount primaryAccount = user.getPrimaryAccount();
+            primaryAccount.setAccountBalance(primaryAccount.getAccountBalance().add(new BigDecimal(amount)));
+            primaryAccountRepository.save(primaryAccount);
 
             Date date = new Date();
 
-            CurrentTransaction currentTransaction = new CurrentTransaction();
-            currentTransaction.setDate(date);
-            currentTransaction.setAmount(amount);
-            currentTransaction.setDescription("Deposit to Current Account");
-            currentTransaction.setStatus("Finished");
-            currentTransaction.setAvailableBalance(currentAccount.getAccountBalance());
-            currentTransaction.setCurrentAccount(currentAccount);
-            currentTransaction.setType("Account");
+            PrimaryTransaction primaryTransaction = new PrimaryTransaction();
+            primaryTransaction.setDate(date);
+            primaryTransaction.setAmount(amount);
+            primaryTransaction.setDescription("Deposit to Current Account");
+            primaryTransaction.setStatus("Finished");
+            primaryTransaction.setAvailableBalance(primaryAccount.getAccountBalance());
+            primaryTransaction.setPrimaryAccount(primaryAccount);
+            primaryTransaction.setType("Account");
 
-            transactionService.saveCurrentDepositTransaction(currentTransaction);
+            transactionService.savePrimaryDepositTransaction(primaryTransaction);
         }
         SavingsAccount savingsAccount = new SavingsAccount();
         savingsAccount.setAccountBalance(savingsAccount.getAccountBalance().add(new BigDecimal(amount)));
@@ -97,22 +97,22 @@ public class AccountServiceImpl implements AccountService {
     public void withdraw(String accountType, double amount, Principal principal) {
         User user = userService.findByUsername(principal.getName());
 
-        if (accountType.equalsIgnoreCase("current")) {
-            CurrentAccount currentAccount = user.getCurrentAccount();
-            currentAccount.setAccountBalance(currentAccount.getAccountBalance().subtract(new BigDecimal(amount)));
-            currentAccountRepository.save(currentAccount);
+        if (accountType.equalsIgnoreCase("primary")) {
+            PrimaryAccount primaryAccount = user.getPrimaryAccount();
+            primaryAccount.setAccountBalance(primaryAccount.getAccountBalance().subtract(new BigDecimal(amount)));
+            primaryAccountRepository.save(primaryAccount);
 
             Date date = new Date();
 
-            CurrentTransaction currentTransaction = new CurrentTransaction();
-            currentTransaction.setDate(date);
-            currentTransaction.setAmount(amount);
-            currentTransaction.setDescription("Withdraw from Current Account");
-            currentTransaction.setStatus("Finished");
-            currentTransaction.setAvailableBalance(currentAccount.getAccountBalance());
-            currentTransaction.setCurrentAccount(currentAccount);
-            currentTransaction.setType("Account");
-            transactionService.saveCurrentDepositTransaction(currentTransaction);
+            PrimaryTransaction primaryTransaction = new PrimaryTransaction();
+            primaryTransaction.setDate(date);
+            primaryTransaction.setAmount(amount);
+            primaryTransaction.setDescription("Withdraw from Current Account");
+            primaryTransaction.setStatus("Finished");
+            primaryTransaction.setAvailableBalance(primaryAccount.getAccountBalance());
+            primaryTransaction.setPrimaryAccount(primaryAccount);
+            primaryTransaction.setType("Account");
+            transactionService.savePrimaryDepositTransaction(primaryTransaction);
         }
         SavingsAccount savingsAccount = new SavingsAccount();
         savingsAccount.setAccountBalance(savingsAccount.getAccountBalance().subtract(new BigDecimal(amount)));
