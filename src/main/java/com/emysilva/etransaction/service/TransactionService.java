@@ -6,26 +6,26 @@ import java.security.Principal;
 import java.util.List;
 
 public interface TransactionService {
-    List<CurrentTransaction> findCurrentTransactionList(String username);
+    List<PrimaryTransaction> findPrimaryTransactionList(String username);
 
     List<SavingsTransaction> findSavingsTransactionList(String username);
 
-    void saveCurrentDepositTransaction(CurrentTransaction currentTransaction);
+    void savePrimaryDepositTransaction(PrimaryTransaction primaryTransaction);
 
     void saveSavingsDepositTransaction(SavingsTransaction savingsTransaction);
 
-    void saveCurrentWithdrawTransaction(CurrentTransaction currentTransaction);
+    void savePrimaryWithdrawTransaction(PrimaryTransaction primaryTransaction);
     void saveSavingsWithdrawTransaction(SavingsTransaction savingsTransaction);
 
-    void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount) throws Exception;
+    void betweenAccountsTransfer(String transferFrom, String transferTo, String amount, PrimaryAccount primaryAccount, SavingsAccount savingsAccount) throws Exception;
 
-    List<Beneficiary> findRecipientList(Principal principal);
+    List<Recipient> findRecipientList(Principal principal);
 
-    void saveRecipient(Beneficiary beneficiary);
+    void saveRecipient(Recipient recipient);
 
-    Beneficiary findBeneficiaryByName(String beneficiaryName);
+    Recipient findRecipientByName(String recipientName);
 
-    void deleteBeneficiaryByName(String beneficiaryName);
+    void deleteRecipientByName(String recipientName);
 
-    void toSomeoneElseTransfer(Beneficiary beneficiary, String accountType, String amount, CurrentAccount currentAccount, SavingsAccount savingsAccount);
+    void toSomeoneElseTransfer(Recipient recipient, String accountType, String amount, PrimaryAccount primaryAccount, SavingsAccount savingsAccount);
 }
